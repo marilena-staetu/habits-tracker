@@ -1,0 +1,40 @@
+version: '3'
+
+services:
+  web:
+    build:
+      context: ./web
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/var/www
+    environment:
+      - DB_HOST=database
+      - DB_PORT=3306
+    links:
+      - database
+
+  ###> doctrine/doctrine-bundle ###
+  database:
+    build:
+      context: ./database
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: alabalaroot
+      MYSQL_DATABASE: habits
+      MYSQL_USER: mari
+      MYSQL_PASSWORD: alabala
+    volumes:
+      - ./database/init_sql:/docker-entrypoint-initdb.d
+      - mysql:/var/lib/mysql:delegated
+    ports:
+    - "3306:3306"
+  ###< doctrine/doctrine-bundle ###
+
+  redis:
+    build:
+      context: ./redis
+
+volumes:
+  mysql:
+

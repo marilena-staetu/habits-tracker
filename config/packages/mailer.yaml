@@ -1,0 +1,11 @@
+framework:
+    mailer:
+        dsn: '%env(MAILER_DSN)%'
+        envelope:
+            sender: 'marilena.staetu@gmail.com'
+            recipients: ['foo@example.com', 'bar@example.com']
+        headers:
+            From: 'Marilena <marilena.staetu@gmail.com>'
+            To: 'eu@eu.com'
+            Subject: 'Test'
+            X-Custom-Header: 'Test'
