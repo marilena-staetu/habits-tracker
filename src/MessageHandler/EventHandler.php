@@ -36,7 +36,5 @@ class EventHandler implements MessageHandlerInterface
             ->text(sprintf('You inserted the %s event', $events));
 
         $this->mailer->send($email);
-
-        echo "Message received";
     }
 }
