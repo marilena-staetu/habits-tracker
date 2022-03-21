@@ -7,8 +7,7 @@ You can log in using the form from http://127.0.0.1:8000/login.
 
 After login the app can be used just from the api **http://127.0.0.1:8000/api** as the frontend is not yet ready
 
-The habits and the events can be inserted just by using the api () 
-only by a logged-in user.
+The habits and the events can be inserted using the api only by a logged-in user.
 One user can have many habits and each habit can have just an event per day.
 The user will receive an email at each event.
 
