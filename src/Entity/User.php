@@ -12,31 +12,40 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Annotation\SerializedName;
 use Symfony\Component\Validator\Constraints as Assert;
+use App\Controller\IsMe;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'user')]
 #[ApiResource(
     collectionOperations: [
         'get' => ['security' => "is_granted('ROLE_USER')"],
-        'post'
+        'post' => [
+            'validation_groups' => ['Default', 'create']
+        ]
     ],
     itemOperations: [
         'get' => [
             'security' => "is_granted('ROLE_USER')"
         ],
         'put' => [
-            'security' => "is_granted('ROLE_USER')"
+            'security' => "is_granted('ROLE_USER') and object == user"
         ],
         'delete' => [
             'security' => "is_granted('ROLE_ADMIN')"
         ],
         'patch' => [
-            'security' => "is_granted('ROLE_USER')"
-        ]
+            'security' => "is_granted('ROLE_USER') and object == user"
+        ],
+        'me' => [
+            'method' => 'GET',
+            'path' => '/me',
+            'defaults' => [
+                'id' => 0,
+            ],
+        ],
     ],
-    denormalizationContext: ['groups' => ['user:write']],
-    normalizationContext: ['groups' => ['user:read']]
 )]
 #[UniqueEntity(fields: 'email')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
@@ -54,24 +63,30 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private string $email;
 
     #[ORM\Column(type: 'string')]
-    #[Groups(["user:read", "user:write"])]
+    #[Groups(["user:read", "user:write", "habit:item:get"])]
+    #[Assert\NotBlank()]
     private string $username;
 
     #[ORM\Column(type: 'json')]
     private iterable $roles = [];
 
+    /**
+     * @var string The hashed password
+     */
     #[ORM\Column(type: 'string')]
-    #[Groups(["user:write"])]
     private string $password;
 
-    private string $plainPassword;
+    #[Groups(["user:write"])]
+    #[SerializedName("password")]
+    #[Assert\NotBlank(groups: ["create"])]
+    private $plainPassword;
 
     #[ORM\OneToMany(mappedBy: 'owner', targetEntity: 'Habit', orphanRemoval: true)]
     #[Groups(["user:read"])]
     private $habits;
 
     #[ORM\Column(type: 'boolean')]
-    #[Groups(["user:read", "user:write"])]
+    #[Groups(["admin:read", "user:write", "owner:read"])]
     private bool $notification = false;
 
     public function __construct()
@@ -140,7 +155,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getPassword(): string
     {
-        return $this->password;
+        return (string) $this->password;
     }
 
     public function setPassword(string $password): self
@@ -155,8 +170,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function eraseCredentials()
     {
-        // If you store any temporary, sensitive data on the user, clear it here
-        // $this->plainPassword = null;
+         $this->plainPassword = null;
     }
 
     /**
@@ -212,8 +226,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @param string $plainPassword
      */
-    public function setPlainPassword(string $plainPassword): void
+    public function setPlainPassword(string $plainPassword): self
     {
         $this->plainPassword = $plainPassword;
+
+        return $this;
     }
 }

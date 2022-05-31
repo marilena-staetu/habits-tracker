@@ -3,39 +3,33 @@
 namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiResource;
-use ApiPlatform\Core\Annotation\ApiSubresource;
 use App\Repository\HabitRepository;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use App\Validator\IsValidOwner;
 
 #[ORM\Entity(repositoryClass: HabitRepository::class)]
+#[ORM\EntityListeners(["App\Doctrine\HabitSetOwnerListener"])]
 #[ApiResource(
     collectionOperations: [
-        'get' => [
-            'security' => "is_granted('ROLE_USER')"
-        ],
-        'post' => [
-            'security' => "is_granted('ROLE_USER')"
-        ]
+        'get',
+        'post'
     ],
     itemOperations: [
-        'get' => [
-            'security' => "is_granted('ROLE_USER')"
-        ],
+        'get',
         'put' => [
-            'security' => "is_granted('ROLE_USER')"
+            'security' => "is_granted('EDIT', object)",
+            'security_message' => "Only the creator can edit a habit.",
         ],
-        'delete' => [
-            'security' => "is_granted('ROLE_USER')"
-        ],
+        'delete',
         'patch' => [
-            'security' => "is_granted('ROLE_USER')"
+            'security' => "is_granted('EDIT', object)"
         ]
     ],
-    denormalizationContext: ['groups' => ['habit:write']],
-    normalizationContext: ['groups' => ['habit:read']]
+    attributes: ["security" => "is_granted('ROLE_USER')"],
+
 )]
 class Habit
 {
@@ -47,13 +41,13 @@ class Habit
 
     #[ORM\Column(type: 'string', length: 255)]
     #[Assert\NotBlank()]
-    #[Groups(['habit:read', 'habit:write', 'event:read'])]
+    #[Groups(['habit:read', 'habit:write', "event:item:get"])]
     private $name;
 
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'habits')]
     #[ORM\JoinColumn(nullable: false)]
-    #[Assert\NotBlank()]
-    #[Groups(['habit:read', 'habit:write'])]
+    #[Groups(['habit:read', 'habit:collection:post'])]
+    #[IsValidOwner()]
     private $owner;
 
     #[ORM\OneToMany(mappedBy: 'habit', targetEntity: Event::class, orphanRemoval: true)]

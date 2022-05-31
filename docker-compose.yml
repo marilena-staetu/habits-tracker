@@ -35,6 +35,14 @@ services:
     build:
       context: ./redis
 
+  node:
+    build:
+      context: ./node
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./:/var/www
+
 volumes:
   mysql:
 

@@ -21,6 +21,8 @@ RUN pecl install -o -f redis \
 ADD entrypoint.sh /
 RUN chmod +x /entrypoint.sh
 
+
+
 USER developer
 WORKDIR /var/www
 

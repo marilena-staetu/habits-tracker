@@ -25,11 +25,9 @@ use Symfony\Component\Serializer\Annotation\Groups;
             'security' => "is_granted('ROLE_USER')"
         ],
         'delete' => [
-            'security' => "is_granted('ROLE_USER')"
+            'security' => "is_granted('ROLE_ADMIN')"
         ]
     ],
-    denormalizationContext: ['groups' => ['event:write']],
-    normalizationContext: ['groups' => ['event:read']]
 )]
 class Event
 {
@@ -46,7 +44,7 @@ class Event
 
     #[ORM\ManyToOne(targetEntity: Habit::class, inversedBy: 'events')]
     #[ORM\JoinColumn(nullable: false)]
-    #[Groups(['event:read', 'event:write'])]
+    #[Groups(['event:read', 'event:collection:post'])]
     private $habit;
 
     public function getId(): ?int

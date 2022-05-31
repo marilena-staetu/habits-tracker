@@ -2,18 +2,26 @@
 
 namespace App\Controller;
 
+use ApiPlatform\Core\Api\IriConverterInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 
 class SecurityController extends AbstractController
 {
-    #[Route('/login', name: 'app_login')]
-    public function login(AuthenticationUtils $authenticationUtils): Response
+    #[Route('/login', name: 'app_login', methods: ["POST"])]
+    public function login(IriConverterInterface $iriConverter): Response
     {
-        return $this->render('security/login.html.twig', [
-            'error' => $authenticationUtils->getLastAuthenticationError(),
+        if (!$this->isGranted('IS_AUTHENTICATED_FULLY')) {
+            return $this->json([
+                'error' => 'Invalid login request: check that the Content-Type header is "application/json".'
+            ], 400);
+        }
+
+        // TODO user iri is not used in frontend
+        $userIri = $iriConverter->getIriFromItem($this->getUser());
+        return $this->json([
+            'user' => $userIri
         ]);
     }
 
